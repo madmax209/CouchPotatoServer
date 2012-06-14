@@ -1,6 +1,6 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
-from couchpotato.core.helpers.request import jsonified, getParam
+from couchpotato.core.helpers.request import jsonified, getParams
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -25,14 +25,13 @@ class Manage(Plugin):
         })
 
         if not Env.get('dev'):
-            def updateLibrary():
-                self.updateLibrary(full = False)
-            addEvent('app.load', updateLibrary)
+            addEvent('app.load', self.updateLibrary)
 
     def updateLibraryView(self):
 
-        full = getParam('full', default = 1)
-        fireEventAsync('manage.update', full = True if full == '1' else False)
+        params = getParams()
+
+        fireEventAsync('manage.update', full = params.get('full', True))
 
         return jsonified({
             'success': True
@@ -52,11 +51,11 @@ class Manage(Plugin):
 
             if not os.path.isdir(directory):
                 if len(directory) > 0:
-                    log.error('Directory doesn\'t exist: %s', directory)
+                    log.error('Directory doesn\'t exist: %s' % directory)
                 continue
 
-            log.info('Updating manage library: %s', directory)
-            identifiers = fireEvent('scanner.folder', folder = directory, newer_than = last_update if not full else 0, single = True)
+            log.info('Updating manage library: %s' % directory)
+            identifiers = fireEvent('scanner.folder', folder = directory, newer_than = last_update, single = True)
             if identifiers:
                 added_identifiers.extend(identifiers)
 
@@ -68,11 +67,11 @@ class Manage(Plugin):
         if self.conf('cleanup') and full and not self.shuttingDown():
 
             # Get movies with done status
-            total_movies, done_movies = fireEvent('movie.list', status = 'done', single = True)
+            done_movies = fireEvent('movie.list', status = 'done', single = True)
 
             for done_movie in done_movies:
                 if done_movie['library']['identifier'] not in added_identifiers:
-                    fireEvent('movie.delete', movie_id = done_movie['id'], delete_from = 'all')
+                    fireEvent('movie.delete', movie_id = done_movie['id'])
 
         Env.prop('manage.last_update', time.time())
 

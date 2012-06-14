@@ -301,11 +301,11 @@ Block.Search.Item = new Class({
 				'title': self.title_select.get('value'),
 				'profile_id': self.profile_select.get('value')
 			},
-			'onComplete': function(json){
+			'onComplete': function(){
 				self.options.empty();
 				self.options.adopt(
 					new Element('div.message', {
-						'text': json.added ? 'Movie succesfully added.' : 'Movie didn\'t add properly. Check logs'
+						'text': 'Movie succesfully added.'
 					})
 				);
 			},

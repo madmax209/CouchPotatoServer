@@ -41,19 +41,13 @@ class Trakt(Automation):
 
     def call(self, method_url):
 
-        try:
-            if self.conf('automation_password'):
-                headers = {
-                   'Authorization': 'Basic %s' % base64.encodestring('%s:%s' % (self.conf('automation_username'), self.conf('automation_password')))[:-1]
-                }
-            else:
-                headers = {}
+        if self.conf('automation_password'):
+            headers = {
+               'Authorization': "Basic %s" % base64.encodestring('%s:%s' % (self.conf('automation_username'), self.conf('automation_password')))[:-1]
+            }
+        else:
+            headers = {}
 
-            cache_key = 'trakt.%s' % md5(method_url)
-            json_string = self.getCache(cache_key, self.urls['base'] + method_url, headers = headers)
-            if json_string:
-                return json.loads(json_string)
-        except:
-            log.error('Failed to get data from trakt, check your login.')
-
-        return []
+        cache_key = 'trakt.%s' % md5(method_url)
+        json_string = self.getCache(cache_key, self.urls['base'] + method_url, headers = headers)
+        return json.loads(json_string)
